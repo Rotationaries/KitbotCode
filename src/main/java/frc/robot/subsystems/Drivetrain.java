@@ -5,9 +5,14 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import frc.robot.Constants;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.wpilibj.SPI;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Drivetrain extends SubsystemBase {
@@ -31,6 +36,8 @@ public class Drivetrain extends SubsystemBase {
    AHRS gyro = new AHRS(SPI.Port.kMXP);
 
    private static DifferentialDriveOdometry m_odometry;
+
+   private Field2d m_fieldSim = new Field2d();
 
    m_odometry = new DifferentialDriveOdometry(Rotation2d.fromDegrees(getHeading()), 0, 0);
 
@@ -105,11 +112,11 @@ public class Drivetrain extends SubsystemBase {
      // Update the odometry in the periodic block
      m_odometry.update(
          Rotation2d.fromDegrees(getHeading()),
-         m_leftEncoder1.getPosition(),
-         m_rightEncoder1.getPosition());
+         leftFrontEncoder.getPosition(),
+         rightFrontEncoder.getPosition());
      m_fieldSim.setRobotPose(getPose());
-     SmartDashboard.putNumber("ControllerY", -controller.getLeftY());
-     SmartDashboard.putNumber("ControllerX", -controller.getRightX());
+     SmartDashboard.putNumber("ControllerY", -driveControl.getLeftY());
+     SmartDashboard.putNumber("ControllerX", -driveControl.getRightX());
  
      m_drive.setSafetyEnabled(false);
      // m_drive.feed();
@@ -118,11 +125,12 @@ public class Drivetrain extends SubsystemBase {
 
    public Pose2d getPose() {
       return m_odometry.getPoseMeters();
+   }
 
    public void resetOdometry(Pose2d pose) {
       // resetEncoders();
       m_drivetrainSimulator.setPose(pose);
-      m_odometry.resetPosition(Rotation2d.fromDegrees(getHeading()), m_leftEncoder1.getPosition(), m_rightEncoder1.getPosition(), pose);
+      m_odometry.resetPosition(Rotation2d.fromDegrees(getHeading()), leftFrontEncoder.getPosition(), rightFrontEncoder.getPosition(), pose);
     }
 
 }
