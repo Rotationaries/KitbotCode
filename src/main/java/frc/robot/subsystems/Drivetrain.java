@@ -30,6 +30,10 @@ public class Drivetrain extends SubsystemBase {
 
    AHRS gyro = new AHRS(SPI.Port.kMXP);
 
+   private static DifferentialDriveOdometry m_odometry;
+
+   m_odometry = new DifferentialDriveOdometry(Rotation2d.fromDegrees(getHeading()), 0, 0);
+
    public Drivetrain() {
     rightFrontSpark = new CANSparkMax(Constants.RIGHT_FRONT_SPARK, MotorType.kBrushless);
     rightBackSpark = new CANSparkMax(Constants.RIGHT_BACK_SPARK, MotorType.kBrushless);
@@ -94,5 +98,31 @@ public class Drivetrain extends SubsystemBase {
    public double getLeftBackPosition() {
     return leftBackEncoder.getPosition();
    }
+
+   @Override
+   public void periodic() {
+     // This method will be called once per scheduler run
+     // Update the odometry in the periodic block
+     m_odometry.update(
+         Rotation2d.fromDegrees(getHeading()),
+         m_leftEncoder1.getPosition(),
+         m_rightEncoder1.getPosition());
+     m_fieldSim.setRobotPose(getPose());
+     SmartDashboard.putNumber("ControllerY", -controller.getLeftY());
+     SmartDashboard.putNumber("ControllerX", -controller.getRightX());
+ 
+     m_drive.setSafetyEnabled(false);
+     // m_drive.feed();
+     
+   }
+
+   public Pose2d getPose() {
+      return m_odometry.getPoseMeters();
+
+   public void resetOdometry(Pose2d pose) {
+      // resetEncoders();
+      m_drivetrainSimulator.setPose(pose);
+      m_odometry.resetPosition(Rotation2d.fromDegrees(getHeading()), m_leftEncoder1.getPosition(), m_rightEncoder1.getPosition(), pose);
+    }
 
 }
